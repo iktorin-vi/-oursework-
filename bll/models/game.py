@@ -37,5 +37,5 @@ class Game:
             'spectators': self.spectators,
             'result': self.result,
             'players': self.players,
-            'stadium_id': self.stadium_id  # Додаємо stadium_id до серіалізації
+            'stadium_id': self.stadium_id
         }

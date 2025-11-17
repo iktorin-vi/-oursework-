@@ -85,7 +85,6 @@ class GameService:
 
         return categorized
 
-    # ДОДАЄМО НОВИЙ МЕТОД
     def get_games_by_stadium(self, stadium_id: int) -> List[Game]:
         """Повертає всі ігри, пов'язані з конкретним стадіоном"""
         all_games = self.repository.get_all()

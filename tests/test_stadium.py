@@ -115,6 +115,21 @@ class TestStadiumService(unittest.TestCase):
         games_info = self.stadium_service.get_stadium_games_info(999)
         self.assertEqual(len(games_info), 0)
 
+    def test_get_stadium_schedule(self):
+        """Тест для вимоги 3.4.3"""
+        # Створюємо стадіон
+        stadium = self.stadium_service.add_stadium("Тестовий стадіон", 5000, 100.0)
+
+        # Створюємо ігри для цього стадіону
+        self.game_service.add_game("2024-05-01", "Стадіон А", "Команда А", 1000, "перемога", stadium.id)
+        self.game_service.add_game("2024-05-02", "Стадіон Б", "Команда Б", 2000, "поразка")  # Без стадіону
+
+        # Перевіряємо розклад
+        schedule = self.stadium_service.get_stadium_schedule(stadium.id)
+        self.assertEqual(len(schedule), 1)
+        self.assertEqual(schedule[0]['opponent_team'], "Команда А")
+        self.assertEqual(schedule[0]['date'], "2024-05-01")
+
     def tearDown(self):
         # Очищаємо тестові файли
         for filename in [self.stadium_filename, self.game_filename]:

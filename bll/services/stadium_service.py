@@ -72,3 +72,31 @@ class StadiumService:
             'stadium': stadium,
             'games': games_info
         }
+
+    def get_stadium_schedule(self, stadium_id: int) -> List[dict]:
+        """Проста реалізація вимоги - дата ігор та команди"""
+        try:
+            # Отримуємо стадіон
+            stadium = self.get_stadium(stadium_id)
+
+            # Отримуємо всі ігри
+            all_games = self.game_service.get_all_games()
+
+            schedule = []
+            for game in all_games:
+                # Перевіряємо, чи гра пов'язана з цим стадіоном
+                if game.stadium_id == stadium_id:
+                    schedule.append({
+                        'date': game.date,
+                        'opponent_team': game.opponent_team,
+                        'result': game.result,
+                        'game_id': game.id
+                    })
+
+            return schedule
+
+        except StadiumNotFoundException:
+            return []
+        except Exception as e:
+            print(f"Помилка в get_stadium_schedule: {e}")
+            return []

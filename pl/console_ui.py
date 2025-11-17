@@ -9,10 +9,7 @@ class ConsoleUI:
     def __init__(self):
         self.player_service = PlayerService()
         self.game_service = GameService()
-        # Передаємо game_service в stadium_service
         self.stadium_service = StadiumService(self.game_service)
-
-    # ... решта коду залишається без змін ...
 
     def clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -54,9 +51,10 @@ class ConsoleUI:
         print("\n--- Управління стадіонами ---")
         print("1. Додати стадіон")
         print("2. Переглянути всі стадіони")
-        print("3. Переглянути інформацію про стадіон")
+        print("3. Переглянути інформацію про стадіон ")  # Змінили назву
         print("4. Змінити дані стадіону")
         print("5. Видалити стадіон")
+        print("6. Призначити гру стадіону")  # Перенумерували
         print("0. Назад")
 
     def display_search_menu(self):
@@ -423,6 +421,45 @@ class ConsoleUI:
         except Exception as e:
             print(f"Помилка: {str(e)}")
 
+    def assign_game_to_stadium(self):
+        """Призначення гри стадіону"""
+        try:
+            # Показуємо всі ігри
+            print("\n=== ДОСТУПНІ ІГРИ ===")
+            games = self.game_service.get_all_games()
+            for game in games:
+                stadium_info = f" (Стадіон: {game.stadium_id})" if game.stadium_id else " (Без стадіону)"
+                print(f"Гра {game.id}: {game.date} vs {game.opponent_team}{stadium_info}")
+
+            game_id = input("\nВведіть ID гри для призначення: ")
+            if not Validators.validate_id(game_id):
+                print(" Некоректний ID гри!")
+                return
+
+            # Показуємо всі стадіони
+            print("\n=== ДОСТУПНІ СТАДІОНИ ===")
+            stadiums = self.stadium_service.get_all_stadiums()
+            for stadium in stadiums:
+                print(f"Стадіон {stadium.id}: {stadium.name} ({stadium.capacity} місць)")
+
+            stadium_id = input("\nВведіть ID стадіону: ")
+            if not Validators.validate_id(stadium_id):
+                print("Некоректний ID стадіону!")
+                return
+
+            # Призначаємо
+            game = self.game_service.get_game(int(game_id))
+            stadium = self.stadium_service.get_stadium(int(stadium_id))
+
+            self.game_service.update_game(int(game_id), stadium_id=int(stadium_id))
+
+            print(f"Гру '{game.opponent_team}' успішно призначено стадіону '{stadium.name}'!")
+
+        except (GameNotFoundException, StadiumNotFoundException) as e:
+            print(f" {str(e)}")
+        except Exception as e:
+            print(f"Помилка: {str(e)}")
+
     def manage_stadiums(self):
         while True:
             self.display_stadium_menu()
@@ -432,12 +469,14 @@ class ConsoleUI:
                 self.add_stadium()
             elif choice == "2":
                 self.show_all_stadiums()
-            elif choice == "3":
+            elif choice == "3":  # Тепер це 3.4.3
                 self.show_stadium()
             elif choice == "4":
                 self.update_stadium()
             elif choice == "5":
                 self.delete_stadium()
+            elif choice == "6":  # Призначення гри
+                self.assign_game_to_stadium()
             elif choice == "0":
                 break
             else:
@@ -455,32 +494,61 @@ class ConsoleUI:
         try:
             stadiums = self.stadium_service.get_all_stadiums()
             if not stadiums:
-                print("Стадіонів не знайдено.")
+                print(" Стадіонів не знайдено.")
                 return
 
-            print("\nСписок всіх стадіонів:")
+            print("\n=== ВСІ СТАДІОНИ ===")
             for stadium in stadiums:
-                print(stadium)
+                # Рахуємо кількість ігор на стадіоні
+                schedule = self.stadium_service.get_stadium_schedule(stadium.id)
+                games_count = len(schedule)
+
+                games_text = "ігор" if games_count != 1 else "гра"
+                print(f"    Стадіон {stadium.id}: {stadium.name}")
+                print(f"    Місткість: {stadium.capacity} місць")
+                print(f"    Ціна: {stadium.price_per_seat:.2f} грн")
+                print(f"    Заплановано: {games_count} {games_text}")
+                print()
+
         except Exception as e:
-            print(f"Помилка: {str(e)}")
+            print(f" Помилка: {str(e)}")
 
     def show_stadium(self):
+        """Вимога 3.4.3 - інформація про стадіон з іграми"""
         stadium_id = input("Введіть ID стадіону: ")
         if not Validators.validate_id(stadium_id):
             print("Некоректний ID!")
             return
 
         try:
-            stadium = self.stadium_service.get_stadium(int(stadium_id))
-            print(f"\nІнформація про стадіон:")
-            print(stadium)
-            if stadium.scheduled_games:
-                print("Заплановані ігри:", stadium.scheduled_games)
-        except StadiumNotFoundException as e:
-            print(f"Помилка: {str(e)}")
-        except Exception as e:
-            print(f"Помилка: {str(e)}")
+            stadium_id_int = int(stadium_id)
+            stadium = self.stadium_service.get_stadium(stadium_id_int)
 
+            print(f"\n=== ІНФОРМАЦІЯ ПРО СТАДІОН ===")
+            print(f"   Стадіон: {stadium.name}")
+            print(f"   Місткість: {stadium.capacity} місць")
+            print(f"   Ціна за місце: {stadium.price_per_seat:.2f} грн")
+
+            # Отримуємо розклад ігор для цього стадіону
+            schedule = self.stadium_service.get_stadium_schedule(stadium_id_int)
+
+            print(f"\n=== РОЗКЛАД ІГОР НА СТАДІОНІ ===")
+            if schedule:
+                for i, game in enumerate(schedule, 1):
+                    status = " Майбутня" if game['result'] == 'не проведена' else " Завершена"
+                    print(f"{i}.  {game['date']}")
+                    print(f"    Команда-суперник: {game['opponent_team']}")
+                    print(f"    Результат: {game['result']}")
+                    print(f"    Статус: {status}")
+                    print()
+            else:
+                print(" На цьому стадіоні ще не заплановано жодної гри.")
+                print(" Порада: Додайте гру та призначте її цьому стадіону!")
+
+        except StadiumNotFoundException:
+            print(f" Стадіон з ID {stadium_id} не знайдений!")
+        except Exception as e:
+            print(f" Помилка: {str(e)}")
     def update_stadium(self):
         stadium_id = input("Введіть ID стадіону для зміни: ")
         if not Validators.validate_id(stadium_id):
