@@ -2,14 +2,23 @@ import os
 from bll.services.player_service import PlayerService
 from bll.services.game_service import GameService
 from bll.services.stadium_service import StadiumService
+from dal.repositories import JsonRepository
 from .validators import Validators
 from bll.exceptions import *
+from bll.models.player import Player
+from bll.models.game import Game
+from bll.models.stadium import Stadium
 
 class ConsoleUI:
     def __init__(self):
-        self.player_service = PlayerService()
-        self.game_service = GameService()
-        self.stadium_service = StadiumService(self.game_service)
+        # Створюємо конкретні репозиторії та передаємо в сервіси
+        player_repository = JsonRepository(Player, "players.json")
+        game_repository = JsonRepository(Game, "games.json")
+        stadium_repository = JsonRepository(Stadium, "stadiums.json")
+
+        self.player_service = PlayerService(player_repository)
+        self.game_service = GameService(game_repository)
+        self.stadium_service = StadiumService(stadium_repository, self.game_service)
 
     def clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')

@@ -1,11 +1,11 @@
 from typing import List
 from ..models.player import Player
-from dal.repositories import Repository
+from dal.repositories import AbstractRepository
 from ..exceptions import PlayerNotFoundException
 
 class PlayerService:
-    def __init__(self):
-        self.repository = Repository(Player, "players.json")
+    def __init__(self, repository: AbstractRepository):
+        self.repository = repository
 
     def add_player(self, first_name: str, last_name: str, birth_date: str,
                    status: str, health_status: str, salary: float) -> Player:

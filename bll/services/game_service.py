@@ -1,12 +1,11 @@
 from typing import List, Optional
 from ..models.game import Game
-from dal.repositories import Repository
+from dal.abstract_repo import AbstractRepository  # Імпортуємо абстракцію
 from ..exceptions import GameNotFoundException, InvalidGameDataException, PlayerAlreadyInGameException
 
-
 class GameService:
-    def __init__(self):
-        self.repository = Repository(Game, "games.json")
+    def __init__(self, repository: AbstractRepository):
+        self.repository = repository
 
     def add_game(self, date: str, location: str, opponent_team: str,
                  spectators: int = 0, result: str = "не проведена", stadium_id: Optional[int] = None) -> Game:

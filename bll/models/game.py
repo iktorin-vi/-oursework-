@@ -1,11 +1,12 @@
-from datetime import datetime
 from typing import List, Optional
+from bll.models.base import BaseModel
 
-class Game:
+class Game(BaseModel):
     def __init__(self, id: Optional[int] = None, date: str = "", location: str = "",
                  opponent_team: str = "", spectators: int = 0, result: str = "не проведена",
                  players: Optional[List[int]] = None, stadium_id: Optional[int] = None):
-        self.id = id
+        super().__init__(id)
+
         self.date = date
         self.location = location
         self.opponent_team = opponent_team
@@ -29,8 +30,8 @@ class Game:
                 f"Результат: {self.result}, Гравців: {len(self.players)}{stadium_info}")
 
     def to_dict(self) -> dict:
-        return {
-            'id': self.id,
+        base_dict = super().to_dict()
+        base_dict.update({
             'date': self.date,
             'location': self.location,
             'opponent_team': self.opponent_team,
@@ -38,4 +39,5 @@ class Game:
             'result': self.result,
             'players': self.players,
             'stadium_id': self.stadium_id
-        }
+        })
+        return base_dict

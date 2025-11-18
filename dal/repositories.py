@@ -1,9 +1,13 @@
-from typing import List, TypeVar, Type
+from typing import List, TypeVar, Type, Optional
 from .serializers import DataSerializer
+from .abstract_repo import AbstractRepository
+from bll.models.base import BaseModel
 
-T = TypeVar('T')
+T = TypeVar('T', bound=BaseModel)
 
-class Repository:
+
+class JsonRepository(AbstractRepository):
+
     def __init__(self, data_class: Type[T], filename: str):
         self.data_class = data_class
         self.filename = filename
@@ -18,9 +22,9 @@ class Repository:
     def get_all(self) -> List[T]:
         return self._data.copy()
 
-    def get_by_id(self, item_id: int) -> T:
+    def get_by_id(self, item_id: int) -> Optional[T]:
         for item in self._data:
-            if getattr(item, 'id', None) == item_id:
+            if item.id == item_id:
                 return item
         return None
 
@@ -28,13 +32,13 @@ class Repository:
         if not self._data:
             item.id = 1
         else:
-            max_id = max(getattr(i, 'id', 0) for i in self._data)
+            max_id = max(item.id for item in self._data if item.id is not None)
             item.id = max_id + 1
         self._data.append(item)
         self._save_data()
         return item
 
-    def update(self, item_id: int, **kwargs) -> T:
+    def update(self, item_id: int, **kwargs) -> Optional[T]:
         item = self.get_by_id(item_id)
         if item:
             for key, value in kwargs.items():

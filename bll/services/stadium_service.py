@@ -1,12 +1,12 @@
 from typing import List, Dict, Any
-from ..models.stadium import Stadium
-from dal.repositories import Repository
-from ..exceptions import StadiumNotFoundException
-
+from bll.models.stadium import Stadium
+from dal.abstract_repo import AbstractRepository
+from bll.exceptions import StadiumNotFoundException
+from bll.services.game_service import GameService
 
 class StadiumService:
-    def __init__(self, game_service=None):
-        self.repository = Repository(Stadium, "stadiums.json")
+    def __init__(self, repository: AbstractRepository, game_service: GameService):
+        self.repository = repository
         self.game_service = game_service
 
     def add_stadium(self, name: str, capacity: int, price_per_seat: float) -> Stadium:

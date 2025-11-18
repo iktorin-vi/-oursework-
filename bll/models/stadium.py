@@ -1,9 +1,13 @@
 from typing import List, Optional
+from bll.models.base import BaseModel
 
-class Stadium:
+
+class Stadium(BaseModel):  # Наслідуємо від BaseModel
     def __init__(self, id: Optional[int] = None, name: str = "", capacity: int = 0,
                  price_per_seat: float = 0.0, scheduled_games: Optional[List[int]] = None):
-        self.id = id
+        # Викликаємо конструктор батьківського класу
+        super().__init__(id)
+
         self.name = name
         self.capacity = capacity
         self.price_per_seat = price_per_seat
@@ -23,10 +27,11 @@ class Stadium:
                 f"Заплановано ігор: {len(self.scheduled_games)}")
 
     def to_dict(self) -> dict:
-        return {
-            'id': self.id,
+        base_dict = super().to_dict()
+        base_dict.update({
             'name': self.name,
             'capacity': self.capacity,
             'price_per_seat': self.price_per_seat,
             'scheduled_games': self.scheduled_games
-        }
+        })
+        return base_dict
